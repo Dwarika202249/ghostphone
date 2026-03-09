@@ -16,11 +16,12 @@ class SystemEventReceiver : BroadcastReceiver() {
             }
             Intent.ACTION_SHUTDOWN -> {
                 Log.d("GhostNode", "Device shutting down! Attempting final telemetry burst...")
-                // Note: Actual network calls during shutdown are flaky, 
-                // but WorkManager will queue it for the next boot if it fails!
+                // WorkManager queues it for next boot or fires instantly if possible
             }
-            // "android.intent.action.SIM_STATE_CHANGED" is deprecated/restricted in newer APIs 
-            // without system privileges, kept conceptual for the AntiTheft model
+            "android.telephony.action.SIM_STATE_CHANGED" -> {
+                Log.d("GhostNode", "SIM Swap Detected! Triggering emergency telemetry.")
+                startGhostService(context)
+            }
         }
     }
 

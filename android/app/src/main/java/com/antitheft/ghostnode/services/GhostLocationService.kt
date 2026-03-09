@@ -11,9 +11,11 @@ import android.content.IntentFilter
 import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.IBinder
 import android.os.Looper
+import android.telephony.TelephonyManager
 import android.util.Log
 
 import androidx.core.app.NotificationCompat
@@ -81,12 +83,27 @@ class GhostLocationService : Service() {
             }
         } ?: "Offline"
 
+        var networkDetails = ""
+        try {
+            if (networkType == "Wi-Fi") {
+                val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                networkDetails = wifiManager.connectionInfo?.bssid ?: ""
+            } else if (networkType == "Cellular") {
+                val telephonyManager = applicationContext.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                networkDetails = telephonyManager.networkOperatorName ?: ""
+            }
+        } catch (e: SecurityException) {
+            Log.e("GhostNode", "Permission denied for extra network details")
+        }
+
+        val finalNetworkType = if (networkDetails.isNotEmpty()) "$networkType ($networkDetails)" else networkType
+
         // Schedule reliable delivery using WorkManager
         val data = Data.Builder()
             .putDouble("lat", location.latitude)
             .putDouble("lng", location.longitude)
             .putInt("bat", batteryPct)
-            .putString("net", networkType)
+            .putString("net", finalNetworkType)
             .putString("trigger", trigger)
             .build()
 
