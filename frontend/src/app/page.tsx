@@ -30,10 +30,11 @@ export default function DashboardPage() {
 
       // Seed live feed with latest coordinates if they exist
       if (newPath.length > 0) {
+        const latestPoint = newPath[newPath.length - 1];
         addLiveFeedItem({
-          ...newPath[newPath.length - 1],
-          battery: 89, // Mocking these since we didn't fetch them in path
-          network_type: 'Unknown',
+          ...latestPoint,
+          battery: latestPoint.battery,
+          network_type: latestPoint.network_type,
           trigger_source: 'Startup Sync'
         });
       }

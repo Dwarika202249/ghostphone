@@ -55,12 +55,22 @@ async def get_device_path(
     """
     Return historical coordinates for map polyline rendering.
     """
-    stmt = select(TelemetryLog.latitude, TelemetryLog.longitude, TelemetryLog.timestamp)\
-        .where(TelemetryLog.device_id == device_id)\
-        .order_by(TelemetryLog.timestamp.asc())
+    stmt = select(
+        TelemetryLog.latitude, 
+        TelemetryLog.longitude, 
+        TelemetryLog.timestamp,
+        TelemetryLog.battery,
+        TelemetryLog.network_type
+    ).where(TelemetryLog.device_id == device_id).order_by(TelemetryLog.timestamp.asc())
         
     result = await db.execute(stmt)
-    path = [{"lat": row.latitude, "lng": row.longitude, "time": row.timestamp} for row in result.fetchall()]
+    path = [{
+        "lat": row.latitude, 
+        "lng": row.longitude, 
+        "time": row.timestamp,
+        "battery": row.battery,
+        "network_type": row.network_type
+    } for row in result.fetchall()]
     
     return {"device_id": device_id, "path": path}
 

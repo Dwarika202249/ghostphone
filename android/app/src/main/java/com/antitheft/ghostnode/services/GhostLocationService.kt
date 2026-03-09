@@ -9,10 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.BatteryManager
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+
 import androidx.core.app.NotificationCompat
 import androidx.work.*
 import com.antitheft.ghostnode.workers.TelemetryWorker
@@ -66,14 +69,27 @@ class GhostLocationService : Service() {
             (level * 100 / scale.toFloat()).toInt()
         } ?: 50
 
+        val connectivityManager = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkType = connectivityManager.activeNetwork?.let { network ->
+            connectivityManager.getNetworkCapabilities(network)?.let { capabilities ->
+                when {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi"
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Cellular"
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
+                    else -> "Unknown"
+                }
+            }
+        } ?: "Offline"
+
         // Schedule reliable delivery using WorkManager
         val data = Data.Builder()
             .putDouble("lat", location.latitude)
             .putDouble("lng", location.longitude)
             .putInt("bat", batteryPct)
-            .putString("net", "LTE") // Placeholder, implement network check
+            .putString("net", networkType)
             .putString("trigger", trigger)
             .build()
+
 
         val workRequest = OneTimeWorkRequestBuilder<TelemetryWorker>()
             .setInputData(data)
