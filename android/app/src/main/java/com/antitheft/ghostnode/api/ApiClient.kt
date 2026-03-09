@@ -6,6 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.Response
+import com.antitheft.ghostnode.BuildConfig
 
 data class TelemetryPayload(
     val latitude: Double,
@@ -25,9 +26,8 @@ interface TelemetryApiService {
 }
 
 object ApiClient {
-    // User's Local IP for Physical Device Testing
-    private const val BASE_URL = "http://10.19.16.193:8000/"
-    // private const val BASE_URL = "http://192.168.0.114:8000/"
+    // Dynamic BASE_URL passed from Gradle (local.properties) during compilation.
+    private val BASE_URL = BuildConfig.API_BASE_URL
 
     val instance: TelemetryApiService by lazy {
         Retrofit.Builder()
